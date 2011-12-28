@@ -63,6 +63,10 @@ ifeq ($(EXT), ARDUPILOT)
  CPPSRC += ardupilot.cpp
 endif
 
+ifeq ($(EXT), PAPARAZZI)
+ CPPSRC += paparazzi.cpp
+endif
+
 # BEEPER. Values = BUZZER or BUZZER_MOD
 # (without a mod, BUZZER can make PPM jack output switch from output to input at random)
 BEEPER = BUZZER
@@ -127,6 +131,11 @@ endif
 # If ARDUPILOT-Support is enabled
 ifeq ($(EXT), ARDUPILOT)
  CPPDEFS += -DARDUPILOT
+endif
+
+# If Paparazzi-Support is enabled
+ifeq ($(EXT), PAPARAZZI)
+ CPPDEFS += -DPAPARAZZI
 endif
 
 # If buzzer modified (no interference with PPM jack)

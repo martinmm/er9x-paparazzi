@@ -1666,23 +1666,50 @@ void menuProcModel(uint8_t event)
     lcd_putsAtt(    0,    y, PSTR("Proto"),0);//sub==2 ? INVERS:0);
     lcd_putsnAtt(  6*FW, y, PSTR(PROT_STR)+PROT_STR_LEN*g_model.protocol,PROT_STR_LEN,
                   (sub==subN && subSub==1 ? (s_editMode ? BLINK : INVERS):0));
-    if(!g_model.protocol) {
-      lcd_putsnAtt(  10*FW, y, PSTR("4CH 6CH 8CH 10CH12CH14CH16CH")+4*(g_model.ppmNCH+2),4,(sub==subN && subSub==2  ? (s_editMode ? BLINK : INVERS):0));
-      lcd_putsAtt(    17*FW,    y, PSTR("uSec"),0);
-      lcd_outdezAtt(  17*FW, y,  (g_model.ppmDelay*50)+300, (sub==subN && subSub==3 ? (s_editMode ? BLINK : INVERS):0));
+    switch (g_model.protocol){
+      case PROTO_PPM:
+        lcd_putsnAtt(  10*FW, y, PSTR("4CH 6CH 8CH 10CH12CH14CH16CH")+4*(g_model.ppmNCH+2),4,(sub==subN && subSub==2  ? (s_editMode ? BLINK : INVERS):0));
+        lcd_putsAtt(    17*FW,    y, PSTR("uSec"),0);
+        lcd_outdezAtt(  17*FW, y,  (g_model.ppmDelay*50)+300, (sub==subN && subSub==3 ? (s_editMode ? BLINK : INVERS):0));
+
+        if(sub==subN && (s_editMode || p1valdiff))
+          switch (subSub){
+            case 1:
+                CHECK_INCDEC_H_MODELVAR(event,g_model.protocol,0,PROT_MAX);
+                break;
+            case 2:
+                CHECK_INCDEC_H_MODELVAR(event,g_model.ppmNCH,-2,4);
+                break;
+            case 3:
+                CHECK_INCDEC_H_MODELVAR(event,g_model.ppmDelay,-4,10);
+                break;
+          }
+        break;
+      case PROTO_PPRZ_XBEE_API:
+      case PROTO_PPRZ_TRANSPARENT:
+      case PROTO_PPRZ_LAIRD:
+        if (g_model.ppmNCH > 0) g_model.ppmNCH = 0;
+        lcd_putsnAtt(  13*FW, y, PSTR("3CH 4CH 8CH ")+4*(g_model.ppmNCH+2),4,(sub==subN && subSub==2  ? (s_editMode ? BLINK : INVERS):0));
+
+        if(sub==subN && (s_editMode || p1valdiff))
+          switch (subSub){
+            case 1:
+                CHECK_INCDEC_H_MODELVAR(event,g_model.protocol,0,PROT_MAX);
+                break;
+            case 2:
+                CHECK_INCDEC_H_MODELVAR(event,g_model.ppmNCH,-2,0);
+                break;
+          }
+        break;
+      default:
+        if(sub==subN && (s_editMode || p1valdiff))
+          switch (subSub){
+            case 1:
+                CHECK_INCDEC_H_MODELVAR(event,g_model.protocol,0,PROT_MAX);
+                break;
+          }
+        break;
     }
-    if(sub==subN && (s_editMode || p1valdiff))
-      switch (subSub){
-        case 1:
-            CHECK_INCDEC_H_MODELVAR(event,g_model.protocol,0,PROT_MAX);
-            break;
-        case 2:
-            CHECK_INCDEC_H_MODELVAR(event,g_model.ppmNCH,-2,4);
-            break;
-        case 3:
-            CHECK_INCDEC_H_MODELVAR(event,g_model.ppmDelay,-4,10);
-            break;
-      }
     if((y+=FH)>7*FH) return;
   }subN++;
 
@@ -1967,6 +1994,130 @@ void menuProcDiagCalib(uint8_t event)
 
 void menuProcDiagAna(uint8_t event)
 {
+  static uint16_t count, deg=18;
+  static MState2 mstate2;
+  MSTATE_CHECK_V(1,menuTabDiag,1+5);
+
+  if (count++ > 40) {
+	  deg++;
+	  count = 0;
+  }
+  if (deg >= 360) deg = 0;
+	
+  /* aircraft name */
+  lcd_putsmAtt(1, 0,PSTR("FUNJET1"),0,0);
+  /* flight time */
+  lcd_putsmAtt(13*FW+1, 0,PSTR("00:01:42"),0,0);
+  
+  /* current block (name) */
+  lcd_putsmAtt(1, 1*FH, PSTR("CircleStndby"),0,0);
+  /* block time */
+  lcd_putsmAtt(13*FW+1, 1*FH, PSTR("00:00:23"),0,0);
+  
+  /* speed */
+  lcd_hlineStip(1, 2*FH+4, 8*FW,0xAA);
+  lcd_putsmAtt(1*FW+1, 2*FH,PSTR("99.9ms"),0,0);
+  /* throttle setting */
+  lcd_hlineStip(13*FW+1, 2*FH+4, 8*FW,0xAA);
+  lcd_putsmAtt(15*FW+1, 2*FH,PSTR("100%"),0,0);
+  /* speed bar */
+  lcd_barAtt(1, 2*FH, 21, INVERS);
+  /* throttle setting bar */
+  lcd_barAtt(13*FW, 2*FH, 21, INVERS);
+  
+  /* mode */
+  lcd_putsmAtt(15*FW+1, 3*FH,PSTR("AUTO2"),0,0);
+  
+  /* climb rate */
+//  lcd_putsmAtt(1+9*FW, 4*FH,PSTR("+10.2"),0,0);
+  
+  /* climb rate bar*/
+  lcd_vline(8*FH,  18, 2*FW+2);
+  lcd_vline(8*FH+1,17, 2*FW+3);
+  lcd_vline(8*FH+2,18, 2*FW+2);
+  
+  /* link state */
+//  lcd_putsmAtt(1+1*FW, 3*FH,PSTR("Lnk 999"),0,BLINK);
+  
+  /* rc state */
+  lcd_putsmAtt(1+15*FW, 4*FH,PSTR("NO_RC"),0,INVERS);
+
+  /* on board voltage */
+  lcd_putsmAtt(5*FW, 4*FH,PSTR("."),0,DBLSIZE);
+  lcd_putsmAtt(1*FW+1, 4*FH,PSTR("12"),0,DBLSIZE);
+  lcd_putsmAtt(6*FW+1, 4*FH,PSTR("6"),0,DBLSIZE);
+  
+  /* gps state */
+  lcd_putsmAtt(1+15*FW, 5*FH,PSTR("NOGPS"),0,INVERS);
+
+  /* heading pointer */
+  lcd_putsmAtt(1+6*FW, 6*FH,PSTR("V"),0,0);
+
+#if 0  
+  /* heading */
+  lcd_hlineStip(1+1*FW, 7*FH+4, 11*FW,0x11);
+  lcd_putsmAtt(1+1*FW, 7*FH,PSTR("180"),0,0);
+  lcd_putsmAtt(1+9*FW, 7*FH,PSTR("270"),0,0);
+#endif
+  {
+    int16_t quadr=deg/90, sect=((deg%90)*8+4)/15;
+
+  lcd_outdez(1+10*FW, 4*FH, deg/100);
+  lcd_outdez(1+11*FW, 4*FH, (deg/10)%10);
+  lcd_outdez(1+12*FW, 4*FH, deg%10);
+
+  lcd_outdez(1+10*FW, 5*FH, sect/100);
+  lcd_outdez(1+11*FW, 5*FH, (sect/10)%10);
+  lcd_outdez(1+12*FW, 5*FH, sect%10);
+
+    /* heading */
+    lcd_hlineStip(1+1*FW, 7*FH+4, 11*FW,0x88>>(sect%4));
+    if (sect < 32) {
+      lcd_putsnAtt(1+5*FW-sect, 7*FH, PSTR("000090180270")+3*quadr,3,0);
+    } else
+    if (sect < 38) {
+      lcd_putsnAtt(1+6*FW-sect, 7*FH,PSTR("00908070")+3*quadr,2,0);
+    } else
+    if (sect < 44) {
+      lcd_putsnAtt(1+7*FW-sect, 7*FH,PSTR("0"),1,0);
+    }
+    if (sect > 18) {
+      lcd_putsnAtt(1+13*FW-sect, 7*FH,PSTR("090180270000")+3*quadr,3,0);
+    } else
+    if (sect > 12) {
+      lcd_putsnAtt(1+13*FW-sect, 7*FH,PSTR("09182700")+3*quadr,2,0);
+    } else
+    if (sect > 6) {
+      lcd_putsnAtt(1+13*FW-sect, 7*FH,PSTR("0120")+3*quadr,1,0);
+    }
+    
+    
+    
+//    lcd_putsmAtt(1+1*FW+i, 7*FH,PSTR("000\t090\t180\t270"),0,0);
+//    lcd_putsmAtt(1+9*FW+i, 7*FH,PSTR("090\t180\t270\t000"),0,0);
+  }
+    
+  /* altitude */
+  lcd_putsmAtt(1+13*FW, 6*FH,PSTR("A:1254m"),0,0);
+  
+  /* target altitude, clear heading border */
+  lcd_putsmAtt(1, 7*FH,PSTR(" "),0,0);
+  lcd_putsmAtt(1+12*FW, 7*FH,PSTR(" T:1260m"),0,0);
+
+  /* on board voltage bar */
+  lcd_vline(0*FH+1, 30, 34);
+  lcd_vline(0*FH+2, 30, 34);
+  lcd_vline(0*FH+3, 30, 34);
+  lcd_vline(0*FH+4, 30, 34);
+  lcd_vline(0*FH+5, 30, 34);
+  
+  /* altitude bar */
+  lcd_vline(15*FH+2, 28, 43);
+  lcd_vline(15*FH+3, 28, 43);
+  lcd_vline(15*FH+4, 28, 43);
+  lcd_vline(15*FH+5, 28, 43);
+  lcd_vline(15*FH+6, 28, 43);
+#if 0
   static MState2 mstate2;
   TITLE("ANA");
   MSTATE_CHECK_V(5,menuTabDiag,2);
@@ -1981,6 +2132,7 @@ void menuProcDiagAna(uint8_t event)
     if(i==7) putsVBat(13*FW,y,false,(sub==1 ? INVERS : 0)|PREC1);
   }
   if(sub==1) CHECK_INCDEC_H_GENVAR(event, g_eeGeneral.vBatCalib, -127, 127);
+#endif  
 }
 
 void menuProcDiagKeys(uint8_t event)
@@ -3012,6 +3164,47 @@ void menuProcFrskyConfig(uint8_t event)
 }  
 #endif
 
+#ifdef PAPARAZZI
+
+void menuProcJeti(uint8_t event)
+{
+  TITLE("PAPARAZZI");
+
+  switch(event)
+  {
+    //case EVT_KEY_FIRST(KEY_MENU):
+    //  break;
+    case EVT_KEY_FIRST(KEY_EXIT):
+      JETI_DisableRXD();
+      chainMenu(menuProc0);
+      break;
+  }
+
+  for (uint8_t i = 0; i < 16; i++)
+  {
+    lcd_putcAtt((i+2)*FW,   3*FH, JetiBuffer[i], BSS_NO_INV);
+    lcd_putcAtt((i+2)*FW,   4*FH, JetiBuffer[i+16], BSS_NO_INV);
+  }
+
+  if (JetiBufferReady)
+  {
+    JETI_EnableTXD();
+    if (keyState((EnumKeys)(KEY_UP))) jeti_keys &= JETI_KEY_UP;
+    if (keyState((EnumKeys)(KEY_DOWN))) jeti_keys &= JETI_KEY_DOWN;
+    if (keyState((EnumKeys)(KEY_LEFT))) jeti_keys &= JETI_KEY_LEFT;
+    if (keyState((EnumKeys)(KEY_RIGHT))) jeti_keys &= JETI_KEY_RIGHT;
+
+    JetiBufferReady = 0;    // invalidate buffer
+
+    JETI_putw((uint16_t) jeti_keys);
+    _delay_ms (1);
+    JETI_DisableTXD();
+
+    jeti_keys = JETI_KEY_NOCHANGE;
+  }
+}
+#endif
+
 void menuProcStatistic(uint8_t event)
 {
   TITLE("STAT");
@@ -3132,7 +3325,7 @@ void menuProc0(uint8_t event)
       killEvents(event);
       break;
     case EVT_KEY_LONG(KEY_DOWN):
-#if (!(defined(JETI) || defined(FRSKY) || defined(ARDUPILOT)))
+#if (!(defined(JETI) || defined(FRSKY) || defined(ARDUPILOT) || defined(PAPARAZZI)))
       chainMenu(menuProcStatistic2);
 #endif
 #ifdef JETI
@@ -3146,6 +3339,10 @@ void menuProc0(uint8_t event)
 #ifdef ARDUPILOT
       ARDUPILOT_EnableRXD(); // enable ArduPilot-Telemetry reception
       chainMenu(menuProcArduPilot);
+#endif
+#ifdef PAPARAZZI
+      JETI_EnableRXD(); // enable JETI-Telemetry reception
+      chainMenu(menuProcJeti);
 #endif
       killEvents(event);
       break;
@@ -3755,6 +3952,13 @@ void setupPulses()
     case PROTO_TRACER_CTP1009:
       setupPulsesTracerCtp1009();
       break;
+    case PROTO_PPRZ_XBEE_API:
+    case PROTO_PPRZ_TRANSPARENT:
+    case PROTO_PPRZ_LAIRD:
+#ifdef PAPARAZZI
+      PPRZ_setupPulses(); 
+#endif      
+      break;
   }
 }
 
@@ -3939,4 +4143,3 @@ void setupPulsesTracerCtp1009()
   *pulses2MHzPtr++=0;
   if((pulses2MHzPtr-pulses2MHz) >= (signed)DIM(pulses2MHz)) alert(PSTR("pulse tab overflow"));
 }
-

@@ -50,6 +50,28 @@ void lcd_img(uint8_t i_x,uint8_t i_y,const prog_uchar * imgdat,uint8_t idx,uint8
   }
 }
 
+void lcd_putsmAtt(uint8_t x,uint8_t y,const prog_char * s,uint8_t skip,uint8_t mode)
+{
+  while(skip){
+    while(1){
+      char c = (mode & BSS_NO_INV) ? *s++ : pgm_read_byte(s++);
+      if(c<0x20) break;
+    }
+    skip--;
+  }
+  lcd_putsAtt(x,y,s,mode);
+}
+
+void lcd_barAtt(uint8_t x,uint8_t y,uint8_t w,uint8_t mode)
+{
+  uint8_t   *p  = &displayBuf[ y / 8 * DISPLAY_W + x ];
+  bool     inv  = (mode & INVERS) ? true : (mode & BLINK ? BLINK_ON_PHASE : false);
+  uint8_t     i = min(DISPLAY_END-p,(int)w);
+  if(inv)  for(; i!=0; i--){
+    assert(p<DISPLAY_END);
+    *p++ ^= 0xff;
+  }
+}
 /// invers: 0 no 1=yes 2=blink
 void lcd_putcAtt(uint8_t x,uint8_t y,const char c,uint8_t mode,uint8_t flag)
 {

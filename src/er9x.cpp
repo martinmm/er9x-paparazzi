@@ -454,7 +454,7 @@ uint8_t  g_beepVal[5];
 void message(const prog_char * s)
 {
   lcd_clear();
-  lcd_putsAtt(64-5*FW,0*FH,PSTR("MESSAGE"),DBLSIZE);
+  lcd_putsAtt(64-6*FW,0*FH,PSTR("MESSAGE"),DBLSIZE);
   lcd_puts_P(0,4*FW,s);
   refreshDiplay();
   lcdSetRefVolt(g_eeGeneral.contrast);
@@ -1053,6 +1053,10 @@ int main(void)
 
 #ifdef ARDUPILOT
   ARDUPILOT_Init();
+#endif
+
+#ifdef PAPARAZZI
+  PPRZ_Init();
 #endif
 
   ADMUX=ADC_VREF_TYPE;

@@ -131,7 +131,7 @@
 #define INP_E_AileDR  1
 #define INP_E_ThrCt   0
 
-#if (defined(JETI) || defined(FRSKY) || defined(ARDUPILOT))
+#if (defined(JETI) || defined(FRSKY) || defined(ARDUPILOT) || defined(PAPARAZZI))
   #undef INP_E_ThrCt
   #undef INP_E_AileDR
   #define INP_C_ThrCt   6
@@ -331,9 +331,12 @@ const prog_char APM s_charTab[]=" ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrst
 #define PROTO_SILV_A     1
 #define PROTO_SILV_B     2
 #define PROTO_SILV_C     3
-#define PROTO_TRACER_CTP1009 4
-#define PROT_MAX         4
-#define PROT_STR "PPM   SILV_ASILV_BSILV_CTRAC09"
+#define PROTO_TRACER_CTP1009   4
+#define PROTO_PPRZ_XBEE_API    5
+#define PROTO_PPRZ_TRANSPARENT 6
+#define PROTO_PPRZ_LAIRD 7
+#define PROT_MAX         7
+#define PROT_STR "PPM   SILV_ASILV_BSILV_CTRAC09P_XBEEP_TRNSP_LARD"
 #define PROT_STR_LEN     6
 
 typedef void (*MenuFuncP)(uint8_t event);
@@ -635,6 +638,12 @@ extern uint16_t jeti_keys;
 #ifdef ARDUPILOT
 // ArduPilot Telemetry
 #include "ardupilot.h"
+#endif
+
+#ifdef PAPARAZZI
+// Paparazzi RC & Telemetry
+extern uint16_t jeti_keys;
+#include "paparazzi.h"
 #endif
 
 //extern TrainerData g_trainer;
